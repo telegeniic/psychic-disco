@@ -22,7 +22,7 @@ struct Libro {
 	int ID; //Unico
 	char titulo[30];
 	char autor[30];
-	char anno[4];
+	char anno[4]; //año, se usa doble nn para evitar usar la letra ñ en el codigo
 	char editorial[20];
 	char isbn[15];
 	char tipo[20];
@@ -82,10 +82,13 @@ int Menu_Libros(){
 	
 	switch(op){
 		case 1:
+		//	Nuevo_Libro();
 			break;
 		case 2:
+		//	Editar_Libro();
 			break;
 		case 3:
+		//	Eliminar_Libro();
 			break;
 		case 4:
 			printf("Gracias por usar nuestro programa, vuelva pronto\n");
@@ -100,7 +103,6 @@ int Menu_Libros(){
 			getche();
 			Menu_Libros();
 	}
-	return 0;
 }
 
 int Menu_Biblioteca(){
@@ -119,12 +121,16 @@ int Menu_Biblioteca(){
 	
 	switch(op){
 		case 1:
+		//	Comprar_Libro();
 			break;
 		case 2:
+		//	Rentar_Libro();
 			break;
 		case 3:
+		//	Leer_Sala();
 			break;
 		case 4:
+		//	Regresar_Libro();
 			break;
 		case 5:
 			Menu_Principal();
@@ -139,7 +145,6 @@ int Menu_Biblioteca(){
 			getche();
 			Menu_Biblioteca();
 	}
-	return 0;
 }
 
 int Menu_Inventario(){
@@ -147,6 +152,43 @@ int Menu_Inventario(){
 	system("cls");
 	printf(bienvenida);
 	printf("Se entro al menu de Inventario\n");
+	printf("1.-Buscar por cliente\n");
+	printf("2.-Buscar por libro\n");
+	printf("3.-Regresar al menu principal\n");
+	printf("9.-Salir del programa\n");
+	printf("%d", &op);
+	
+	switch(op){
+		case 1:
+		//	Busqueda_Cliente();
+			break;
+		case 2:
+		//	Menu_Busqueda_Libro();
+			break;
+		case 3:
+			Menu_Principal();
+			break;
+		case 9:
+			printf("Gracias por usar nuestro programa, vuelva pronto\n");
+			getche();
+			return 0;
+		default:
+			system("cls");
+			printf("Opcion no encontrada, favor de seleccionar una opcion valida\n");
+			getche();
+			Menu_Inventario();
+			
+	}
+}
+
+int Menu_Busqueda_Libro(){
+	int op;
+	system("cls");
+	printf(bienvenida);
+	printf("Busqueda por Libro\n");
+	printf("1.-Buscar por titulo\n");
+	printf("2.-Buscar por Autor\n");
+	printf("3.-Buscar por ISBN\n");
 }
 
 int Menu_Principal(){
