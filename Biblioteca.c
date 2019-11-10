@@ -9,12 +9,7 @@ struct Cliente {
 	char nombre[30], apellido[30];
 	char correo[30];
 	char telefono[10];
-	struct Direccion {
-		char calle[20];
-		char numero[4];
-		char colonia[20];
-		char codigo_postal[6];
-	};
+	char direccion[30];
 	char notas[100];
 };
 
@@ -189,6 +184,31 @@ int Menu_Busqueda_Libro(){
 	printf("1.-Buscar por titulo\n");
 	printf("2.-Buscar por Autor\n");
 	printf("3.-Buscar por ISBN\n");
+	printf("4.-Regresar al menu de inventario\n");
+	printf("5.-Regresar al menu principal\n");
+	printf("9.-Salir del programa\n");
+	printf("Op: ");
+	scanf("%d", &op);
+	
+	switch(op){
+		case 1:
+			break;
+		case 2:
+			break;
+		case 3:
+			break;
+		case 4:
+			break;
+		case 5:
+			break;
+		case 9:
+			return 0;
+		default:
+			system("cls");
+			printf("Opcion no encontrada, favor de seleccionar una opcion valida\n");
+			getche();
+			Menu_Busqueda_Libro();
+	}
 }
 
 int Menu_Principal(){
