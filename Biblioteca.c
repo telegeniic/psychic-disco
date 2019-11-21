@@ -27,6 +27,19 @@ struct Libro {
 	int inventario; //cantidad de piezas en inventario
 };
 
+typedef struct fecha{
+	int dia;
+	int mes;
+	int anno;
+}Fecha;
+
+struct Ventas {
+	int idCliente;
+	int idLibro;
+	int dias;
+	Fecha fecha;
+};
+
 int Menu_Clientes(){
 	int op;
 	system("cls");
@@ -474,7 +487,6 @@ int Editar_Libro(){
 }
 
 int Imprimir_Libro(struct Libro libro){
-	system("cls");
 	printf("Los datos del libro:\n");
 	printf("ID: %d\n", libro.ID);
 	printf("Titulo: %s\n", libro.titulo);
@@ -482,7 +494,17 @@ int Imprimir_Libro(struct Libro libro){
 	printf("A%co: %s\n", 164, libro.anno);
 	printf("Editorial: %s\n", libro.editorial);
 	printf("ISBN: %s\n", libro.isbn);
-	printf("Tipo: %d\n", libro.tipo);
+	switch(libro.tipo){
+		case 1:
+			printf("Tipo: Renta\n");
+			break;
+		case 2:
+			printf("Tipo: Venta\n");
+			break;
+		case 3:
+			printf("Tipo: Solo Lectura\n");
+			break;
+	}
 	printf("Notas: %s\n", libro.notas);
 	printf("Precio $%d\n", libro.precio);
 	printf("Inventario: %d\n", libro.inventario);
@@ -643,6 +665,7 @@ int Rentar_Libro(){
 	int idCliente, clienteEncontrado, dias, maxLib;
 	float total;
 	char temp[100], buscar[100];
+	struct Ventas venta;
 	struct Cliente *cliente;
 	struct Libro *libro;
 	FILE *lectura;
@@ -665,13 +688,11 @@ int Rentar_Libro(){
 		rewind(lectura);
 		
 		for(i=1;!feof(fcliente);i++){
-			printf("Haciendo mas grande el arreglo cliente");
 			cliente = realloc(cliente, i*sizeof(struct Cliente));
 			fscanf(fcliente, "%d %s %s %s %s %s %s\n", &tempID, temp,temp,temp,temp,temp,temp);
 		}
 		
 		for(i=1;!feof(lectura);i++){
-			printf("Haciendo mas grande el arrego libros");
 			libro = realloc(libro, i*sizeof(struct Libro));
 			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", &tempID, temp,temp,temp,temp,temp,&tempInt,temp,&tempInt,&tempInt);
 		}
@@ -680,13 +701,11 @@ int Rentar_Libro(){
 		rewind(lectura);
 		
 		for(j=0;!feof(fcliente);j++){
-			printf("Guardando clientes");
 			fscanf(fcliente, "%d %s %s %s %s %s %s\n", &cliente[j].ID, cliente[j].nombre, cliente[j].apellido, cliente[j].correo, cliente[j].telefono, cliente[j].direccion, cliente[j].notas);
 		}
 		max = j;
 		
 		for(j=0;!feof(lectura);j++){
-			printf("Guardando libros");
 			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", 
 					&libro[j].ID, libro[j].titulo, libro[j].autor, libro[j].anno, libro[j].editorial, libro[j].isbn,
 					&libro[j].tipo, libro[j].notas, &libro[j].precio, &libro[j].inventario);
@@ -750,8 +769,15 @@ int Rentar_Libro(){
 				
 				time_t tiempo = time(0); //Bloque que consigue la fecha de hoy
 		        struct tm *tlocal = localtime(&tiempo);
-		        char fecha[11];
-		        strftime(fecha,11,"%d/%m/%y",tlocal);
+		        char dia[3];
+		        strftime(dia,3,"%d",tlocal);
+		        char mes[3];
+		        strftime(mes,3,"%m",tlocal);
+		        char anno[3];
+		        strftime(anno,3,"%y",tlocal);
+		        venta.idCliente = clienteEncontrado;
+		        venta.idLibro = libro[i].ID;
+		        venta.dias = dias;
 				
 				printf("Desea realizar la renta?\n");
 				printf("1.-Si\n2.-No\n");
@@ -760,7 +786,7 @@ int Rentar_Libro(){
 				if(op == 1) {
 					libro[i].inventario = libro[i].inventario - cantidad;
 					escritura = fopen("Rentas.txt","a");
-					fprintf(escritura, "%d %d %d %s\n", clienteEncontrado, libro[i].ID, dias, fecha);
+					fprintf(escritura, "%d %d %d %s %s %s\n", venta.idCliente, venta.idLibro, venta.dias, dia, mes, anno);
 					fclose(escritura);
 					
 					escritura = fopen("Libros.txt","w");
@@ -797,14 +823,15 @@ int Menu_Inventario(){
 	printf("2.-Buscar por libro\n");
 	printf("3.-Regresar al menu principal\n");
 	printf("9.-Salir del programa\n");
-	printf("%d", &op);
+	scanf("%d", &op);
+	fflush(stdin);
 	
 	switch(op){
 		case 1:
-		//	Busqueda_Cliente();
+			Busqueda_Cliente();
 			break;
 		case 2:
-		//	Menu_Busqueda_Libro();
+			Menu_Busqueda_Libro();
 			break;
 		case 3:
 			Menu_Principal();
@@ -820,6 +847,129 @@ int Menu_Inventario(){
 			Menu_Inventario();
 			
 	}
+}
+
+int Busqueda_Cliente(){
+	int i,j,k, op, max, busquedaID, error, tempID, noVentas, tempInt;
+	int maxVenta, maxLibros;
+	char temp[100];
+	
+	struct Libro *libro;
+	struct Cliente *cliente;
+	struct Ventas *venta;
+	
+	FILE *lectura;
+	FILE *ventas;
+	FILE *libros;
+	
+	libro = (struct Libro *)malloc(sizeof(struct Libro));
+	venta = (struct Ventas *)malloc(sizeof(struct Ventas));
+	cliente = (struct Cliente *)malloc(sizeof(struct Cliente));
+	
+	libros = fopen("Libros.txt", "r");
+	ventas = fopen("Rentas.txt", "r");
+	lectura = fopen("Clientes.txt","r");
+	
+	if(ventas==NULL || feof(ventas)){
+		printf("No hay ventas registradas");
+		noVentas = 1;
+	}
+	if(lectura==NULL || feof(lectura)){
+		printf("No hay clientes registrados\n");
+	} 
+	else if(libros==NULL || feof(libros)){
+		printf("No hay libros registrados\n");
+	}
+	else {
+		
+		for(i=1;!feof(libros);i++){
+			libro = realloc(libro, i*sizeof(struct Libro));
+			fscanf(libros, "%d %s %s %s %s %s %d %s %d %d\n", &tempID, temp,temp,temp,temp,temp,&tempInt,temp,&tempInt,&tempInt);
+		}
+		maxLibros = i;
+		
+		for(i=1;!feof(ventas);i++){
+			venta = realloc(venta, i*sizeof(struct Ventas));
+			fscanf(ventas, "%d %d %d %d %d %d\n", &tempID, &tempID,&tempID,&tempID,&tempID,&tempID);
+		}
+		maxVenta = i;
+		
+		for(i=1;!feof(lectura);i++){
+			cliente = realloc(cliente, i*sizeof(struct Cliente));
+			fscanf(lectura, "%d %s %s %s %s %s %s\n", &tempID, temp,temp,temp,temp,temp,temp);
+		}
+		max = i;
+		
+		rewind(libros);
+		rewind(ventas);
+		rewind(lectura);
+		
+		for(j=0;!feof(libros);j++){
+			fscanf(libros, "%d %s %s %s %s %s %d %s %d %d\n", 
+					&libro[j].ID, libro[j].titulo, libro[j].autor, libro[j].anno, libro[j].editorial, libro[j].isbn,
+					&libro[j].tipo, libro[j].notas, &libro[j].precio, &libro[j].inventario);
+		}
+		for(j=0;!feof(lectura);j++){
+			fscanf(lectura, "%d %s %s %s %s %s %s\n", &cliente[j].ID, cliente[j].nombre, cliente[j].apellido, cliente[j].correo, cliente[j].telefono, cliente[j].direccion, cliente[j].notas);
+		}
+		for(j=0;!feof(ventas);j++){
+			fscanf(ventas, "%d %d %d %d %d %d\n", &venta[j].idCliente, &venta[j].idLibro ,&venta[j].dias,&venta[j].fecha.dia, &venta[j].fecha.mes, &venta[j].fecha.anno);
+		}
+		
+		fclose(libros);
+		fclose(ventas);
+		fclose(lectura);
+		
+		do{
+			printf("Cual seria el id del cliente a buscar?\n");
+			scanf("%d", &busquedaID);
+			
+			for(i=0;i<max;i++){
+				printf("id: %d\n", cliente[i].ID);
+				if(busquedaID == cliente[i].ID) {
+					error=0;
+					break;
+				}
+				else error = 1;	
+			} 
+			if(error != 1){
+				system("cls");
+				Imprimir_Cliente(cliente[i]);
+				for(j=0;i<maxVenta;i++){
+					if(venta[j].idCliente == cliente[i].ID){
+						error = 0;
+						break;
+					}
+					else error = 1;
+				}
+				if(error != 1){
+					for(k=0;k<maxLibros;k++){
+						if(venta[j].idLibro == libro[k].ID){
+							error = 0;
+							break;
+						}
+						else error = 1;
+					}
+					if(error != 1){
+						printf("El cliente rento el siguiente libro\n");
+						Imprimir_Libro(libro[k]);
+					}
+				}
+				else printf("El cliente no ah rentado libros\n");
+			}
+			else printf("Id No encontrado\n");
+			
+			printf("Desea buscar otro cliente?\n");
+			printf("1.-Si\n2.-No\n");
+			scanf("%d", &op);
+			fflush(stdin);
+		} while(op==1);
+	}
+	free(libro);
+	free(venta);
+	free(cliente);
+	Menu_Principal();
+	return 0;
 }
 
 int Menu_Busqueda_Libro(){
@@ -838,22 +988,174 @@ int Menu_Busqueda_Libro(){
 	
 	switch(op){
 		case 1:
+			Busqueda_Titulo();
 			break;
 		case 2:
+			Busqueda_Autor();
 			break;
 		case 3:
+			Busqueda_ISBN();
 			break;
 		case 4:
+			Menu_Inventario();
 			break;
 		case 5:
+			Menu_Principal();
 			break;
 		case 9:
+			printf("Gracias por usar nuestro programa, vuelva pronto\n");
+			getche();
 			return 0;
 		default:
 			system("cls");
 			printf("Opcion no encontrada, favor de seleccionar una opcion valida\n");
 			getche();
 			Menu_Busqueda_Libro();
+	}
+}
+
+int Busqueda_Titulo(){
+		int i,j, op, max, busquedaID, error, tempID, tempInt, encontrado, indice, cantidad;
+	float total;
+	char temp[100], buscar[100];
+	struct Libro *libro;
+	FILE *lectura;
+	FILE *escritura;
+	libro = (struct Libro *)malloc(sizeof(struct Libro));
+	lectura = fopen("Libros.txt","r");
+	rewind(lectura);
+	if(lectura==NULL || feof(lectura)){
+		printf("No hay libros para buscar\n");
+	} 
+	else {
+		
+		for(i=1;!feof(lectura);i++){
+			libro = realloc(libro, i*sizeof(struct Libro));
+			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", &tempID, temp,temp,temp,temp,temp,&tempInt,temp,&tempInt,&tempInt);
+		}
+		
+		max = i;
+		rewind(lectura);
+		
+		for(j=0;!feof(lectura);j++){
+			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", 
+					&libro[j].ID, libro[j].titulo, libro[j].autor, libro[j].anno, libro[j].editorial, libro[j].isbn,
+					&libro[j].tipo, libro[j].notas, &libro[j].precio, &libro[j].inventario);
+		}
+		
+
+			printf("Escriba el titulo del libro\n");
+			scanf(" %s", buscar);
+			for(i=0;i<max;i++){
+				if(strcmp(libro[i].titulo,buscar) == 0) {
+					encontrado = 1;
+					break;
+				}
+			}
+		
+		if(encontrado == 1){
+			Imprimir_Libro(libro[i]);
+		}
+		else{
+			printf("No se ah encontrado el libro\n");
+		}
+		
+	}
+}
+
+int Busqueda_ISBN(){
+	int i,j, op, max, busquedaID, error, tempID, tempInt, encontrado, indice, cantidad;
+	float total;
+	char temp[100], buscar[100];
+	struct Libro *libro;
+	FILE *lectura;
+	FILE *escritura;
+	libro = (struct Libro *)malloc(sizeof(struct Libro));
+	lectura = fopen("Libros.txt","r");
+	rewind(lectura);
+	if(lectura==NULL || feof(lectura)){
+		printf("No hay libros para buscar\n");
+	} 
+	else {
+		
+		for(i=1;!feof(lectura);i++){
+			libro = realloc(libro, i*sizeof(struct Libro));
+			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", &tempID, temp,temp,temp,temp,temp,&tempInt,temp,&tempInt,&tempInt);
+		}
+		
+		max = i;
+		rewind(lectura);
+		
+		for(j=0;!feof(lectura);j++){
+			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", 
+					&libro[j].ID, libro[j].titulo, libro[j].autor, libro[j].anno, libro[j].editorial, libro[j].isbn,
+					&libro[j].tipo, libro[j].notas, &libro[j].precio, &libro[j].inventario);
+		}
+		
+		printf("Escriba el ISBN del libro\n");
+		scanf(" %s", buscar);
+		for(i=0;i<max;i++){
+			if(strcmp(libro[i].isbn,buscar) == 0){
+				encontrado = 1;
+				break;
+			}
+		}
+		
+		if(encontrado == 1){
+			Imprimir_Libro(libro[i]);
+		}
+		else{
+			printf("No se ah encontrado el libro\n");
+		}
+		
+	}
+}
+
+int Busqueda_Autor(){
+	int i,j, op, max, busquedaID, error, tempID, tempInt, encontrado, indice, cantidad;
+	float total;
+	char temp[100], buscar[100];
+	struct Libro *libro;
+	FILE *lectura;
+	FILE *escritura;
+	libro = (struct Libro *)malloc(sizeof(struct Libro));
+	lectura = fopen("Libros.txt","r");
+	rewind(lectura);
+	if(lectura==NULL || feof(lectura)){
+		printf("No hay libros para buscar\n");
+	} 
+	else {
+		
+		for(i=1;!feof(lectura);i++){
+			libro = realloc(libro, i*sizeof(struct Libro));
+			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", &tempID, temp,temp,temp,temp,temp,&tempInt,temp,&tempInt,&tempInt);
+		}
+		
+		max = i;
+		rewind(lectura);
+		
+		for(j=0;!feof(lectura);j++){
+			fscanf(lectura, "%d %s %s %s %s %s %d %s %d %d\n", 
+					&libro[j].ID, libro[j].titulo, libro[j].autor, libro[j].anno, libro[j].editorial, libro[j].isbn,
+					&libro[j].tipo, libro[j].notas, &libro[j].precio, &libro[j].inventario);
+		}
+		
+		printf("Escriba el autor del libro\n");
+		scanf(" %s", buscar);
+		for(i=0;i<max;i++){
+			if(strcmp(libro[i].autor,buscar) == 0){
+				encontrado = 1;
+				break;
+			}
+		}
+		
+		if(encontrado == 1){
+			Imprimir_Libro(libro[i]);
+		}
+		else{
+			printf("No se ah encontrado el libro\n");
+		}
+		
 	}
 }
 
@@ -891,6 +1193,7 @@ int Menu_Principal(){
 			system("cls");
 			printf("Opcion no encontrada, favor de seleccionar una opcion valida\n");
 			getche();
+			fflush(stdin);
 			Menu_Principal();		
 	}
 }
