@@ -715,8 +715,8 @@ int Imprimir_Ticket(struct Libro libro, int cantidad, float total){
 }
 
 int Regresar_Libro(){
-	int i,j, op, max, busquedaID, error, tempID, tempInt, encontrado, indice, cantidad;
-	int idCliente, clienteEncontrado, dias, maxLib, maxRenta;
+	int i,j,k, op, max, busquedaID, error, tempID, tempInt, encontrado, indice, cantidad;
+	int idCliente, clienteEncontrado, dias, maxLib, maxRenta, idLibro;
 	float total;
 	char temp[100], buscar[100];
 	
@@ -733,7 +733,7 @@ int Regresar_Libro(){
 	cliente = (struct Cliente *)malloc(sizeof(struct Cliente));
 	libro = (struct Libro *)malloc(sizeof(struct Libro));
 	
-	renta = fopen("Rentas.txt", "r")''
+	renta = fopen("Rentas.txt", "r");
 	fcliente = fopen("Clientes.txt", "r");
 	lectura = fopen("Libros.txt","r");
 	
@@ -822,15 +822,17 @@ int Regresar_Libro(){
 			time_t tiempo = time(0); //Bloque que consigue la fecha de hoy
 		    struct tm *tlocal = localtime(&tiempo);
 		    char diac[3];
-		    strftime(dia,3,"%d",tlocal);
+		    strftime(diac,3,"%d",tlocal);
 		    char mesc[3];
-		    strftime(mes,3,"%m",tlocal);
+		    strftime(mesc,3,"%m",tlocal);
 		    char annoc[3];
-		    strftime(anno,3,"%y",tlocal);
+		    strftime(annoc,3,"%y",tlocal);
 		    
 		    int dia = atoi(diac);
 		    int mes = atoi(mesc);
 		    int anno = atoi(annoc);
+		    int multa;
+		    int l;
 		    
 		    //calculo, suponiendo que todos los meses son de 30 dias, y no hay años bisiestos
 		    int diferencia = dia - venta[k].fecha.dia  + (30 * (mes - venta[k].fecha.mes)) + (365 * (anno - venta[k].fecha.anno));
